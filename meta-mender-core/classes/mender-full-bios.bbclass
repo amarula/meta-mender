@@ -5,8 +5,7 @@ inherit mender-setup
 
 MENDER_FEATURES_ENABLE:append = " \
     mender-image \
-    mender-auth-install \
-    mender-update-install \
+    mender-client-install \
     mender-systemd \
 "
 

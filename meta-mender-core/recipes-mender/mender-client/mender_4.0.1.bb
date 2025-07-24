@@ -11,11 +11,6 @@ require mender_4.x.inc
 
 SRC_URI = "gitsm://github.com/mendersoftware/mender;protocol=https;branch=4.0.x"
 
-# required for scarthgap, as it defaults to the usrmerge DISTRO_FEATURE
-SRC_URI:append = " \
-     file://0001-CMakeLists.txt-fix-SYSTEMD_UNIT_DIR.patch \
-"
-
 # Tag: 4.0.1
 SRCREV = "584d7966631d0fbde8d7160bad6139c8a88471d6"
 

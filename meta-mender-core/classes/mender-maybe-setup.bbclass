@@ -14,6 +14,12 @@ def mender_features_list(d):
     else:
         disabled = disabled.split()
 
+    if "mender-client-install" in enabled and "mender-client-install" not in disabled:
+        if "mender-auth-install" not in enabled:
+            enabled.append("mender-auth-install")
+        if "mender-update-install" not in enabled:
+            enabled.append("mender-update-install")
+
     return [feature for feature in enabled if feature not in disabled]
 
 def mender_features(d, separator=" "):
@@ -36,6 +42,11 @@ python() {
 
         # Enabled by GRUB/systemd-boot to extend UEFI overlay recipes.
         'mender-efi-boot',
+
+        # Install of Mender, with the minimum components. This includes no
+        # references to specific partition layouts. Enabling this automatically
+        # enables `mender-auth-install` and `mender-update-install`.
+        'mender-client-install',
 
         # Install of mender-auth, with the minimum components.
         'mender-auth-install',
@@ -89,9 +100,6 @@ python() {
 
         # Enable the testing/* layers and functionality
         'mender-testing-enabled',
-
-        # Enable UEFI Capsule artifact generation
-        'mender-image-uefi-capsule',
 
         # Enable prepopulation of second root partition
         'mender-prepopulate-inactive-partition',

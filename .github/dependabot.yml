@@ -7,10 +7,6 @@ updates:
     schedule:
       interval: monthly
       day: saturday
-    groups:
-      python-test-dependencies:
-        patterns:
-          - "*"
   - commit-message:
       prefix: chore
     directory: /meta-mender-qemu/docker/qemux86-64
@@ -26,8 +22,6 @@ updates:
       interval: monthly
       day: saturday
     target-branch: master
-    reviewers:
-      - "mendersoftware/client-dependabot-reviewers"
   - commit-message:
       prefix: chore
     directory: /
@@ -35,9 +29,15 @@ updates:
     schedule:
       interval: monthly
       day: saturday
-    target-branch: scarthgap
-    reviewers:
-      - "mendersoftware/client-dependabot-reviewers"
+    target-branch: zeus
+  - commit-message:
+      prefix: chore
+    directory: /
+    package-ecosystem: gitsubmodule
+    schedule:
+      interval: monthly
+      day: saturday
+    target-branch: dunfell
   - commit-message:
       prefix: chore
     directory: /
@@ -46,5 +46,3 @@ updates:
       interval: monthly
       day: saturday
     target-branch: kirkstone
-    reviewers:
-      - "mendersoftware/client-dependabot-reviewers"

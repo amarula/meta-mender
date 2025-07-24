@@ -4,8 +4,7 @@
 MENDER_FEATURES_ENABLE:append = " \
     mender-image \
     mender-image-ubi \
-    mender-auth-install \
-    mender-update-install \
+    mender-client-install \
     mender-systemd \
     mender-ubi \
     mender-uboot \

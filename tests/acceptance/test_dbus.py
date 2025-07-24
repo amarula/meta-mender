@@ -92,6 +92,57 @@ class TestDBus:
             cleanup_mender_state(request, connection)
 
     @pytest.mark.min_mender_version("2.5.0")
+    def test_dbus_get_jwt_token(
+        self, request, bitbake_variables, connection, setup_mock_server
+    ):
+        """Test that the JWT token can be retrieved using D-Bus."""
+
+        if version_is_minimum(bitbake_variables, "mender-client", "4.0.0"):
+            pytest.skip(
+                "In Mender client 4.0.0 you cannot get use GetJwtToken without using FetchJwtToken first."
+            )
+
+        try:
+            # bootstrap the client
+            result = connection.run("mender bootstrap --forcebootstrap")
+            assert result.exited == 0
+
+            # start the mender-client service
+            result = connection.run("systemctl start mender-client")
+            assert result.exited == 0
+
+            # get the JWT token via D-Bus
+            output = ""
+            for i in range(60):
+                result = connection.run(
+                    "dbus-send --system --dest=io.mender.AuthenticationManager --print-reply /io/mender/AuthenticationManager io.mender.Authentication1.GetJwtToken || true"
+                )
+                if self.JWT_TOKEN in result.stdout:
+                    output = result.stdout
+                    break
+                time.sleep(5)
+
+            assert f'string "{self.JWT_TOKEN}' in output
+            if version_is_minimum(bitbake_variables, "mender-client", "3.3.1"):
+                assert 'string "http://127.0.0.1:' in output
+                # Check that this really is the only port we're listening on.
+                lines = connection.run("netstat -t -u -l -p -n").stdout.split("\n")
+                lines = [line for line in lines if line.strip().endswith("/mender")]
+                assert len(lines) == 1
+                address_and_port_index = 3
+                listen = lines[0].split()[address_and_port_index]
+                assert listen.startswith("127.0.0.1:")
+                assert f'string "http://{listen}"' in output
+            elif version_is_minimum(bitbake_variables, "mender-client", "3.2.0"):
+                assert 'string "http://localhost:' in output
+            else:
+                assert 'string "https://docker.mender.io' in output
+
+        finally:
+            connection.run("systemctl stop mender-client")
+            cleanup_mender_state(request, connection)
+
+    @pytest.mark.min_mender_version("2.5.0")
     def test_dbus_fetch_jwt_token(
         self,
         request,

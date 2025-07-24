@@ -1,6 +1,0 @@
-# Default owners for everything
-* @mendersoftware/client-dependabot-reviewers
-
-# Test and docker directories
-/tests/acceptance/ @mendersoftware/client-dependabot-reviewers
-/meta-mender-qemu/docker/ @mendersoftware/client-dependabot-reviewers

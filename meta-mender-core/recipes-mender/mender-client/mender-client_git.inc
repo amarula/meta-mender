@@ -7,7 +7,7 @@ PKGV = "${@'999+${PV}' if any(['${PV}'.startswith(p) for p in ['master', 'featur
 
 MENDER_BRANCH = "${@mender_branch_from_preferred_version(d)}"
 
-SRC_URI = "gitsm://github.com/mendersoftware/mender;protocol=https;branch=${MENDER_BRANCH}"
+SRC_URI = "git://github.com/mendersoftware/mender;protocol=https;branch=${MENDER_BRANCH}"
 
 # Disables the need for every dependency to be checked, for easier development.
 _MENDER_DISABLE_STRICT_LICENSE_CHECKING = "1"
@@ -91,3 +91,18 @@ LIC_FILES_CHKSUM = " \
     ${@mender_license(d.getVar('MENDER_BRANCH'))['license_file']};md5=f92624f2343d21e1986ca36f82756029 \
 "
 LICENSE = "${@mender_license(d.getVar('MENDER_BRANCH'))['license']}"
+
+def mender_maybe_artifact_info(d):
+    import re
+    branch = d.getVar("MENDER_BRANCH")
+    match = re.match(r"([0-9]+)\.([0-9]+)\.", branch)
+    if match is None:
+        return ""
+
+    major = int(match.group(1))
+    minor = int(match.group(2))
+    if major < 3 or (major == 3 and minor < 5):
+        return " mender-artifact-info"
+    else:
+        return ""
+

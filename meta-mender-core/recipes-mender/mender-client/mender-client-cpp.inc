@@ -30,9 +30,6 @@ MENDER_CLIENT ?= "mender-updated"
 EXTRA_OECMAKE:append = " -DMENDER_DOWNLOAD_GTEST=NO"
 EXTRA_OECMAKE:append = " -DSYSTEMD_UNIT_DIR=${systemd_system_unitdir}"
 
-# make sure the distro policy for systemd units is followed
-EXTRA_OECMAKE:append = " -D SYSTEMD_UNIT_DIR=${systemd_system_unitdir}"
-
 inherit cmake
 
 DEPENDS += "lmdb googletest boost libarchive dbus"
@@ -63,7 +60,6 @@ RRECOMMENDS:mender-update:append = "${@bb.utils.contains('PACKAGECONFIG', 'modul
 RRECOMMENDS:mender-update:append = "${@bb.utils.contains('PACKAGECONFIG', 'modules', ' mender-flash', '', d)}"
 
 PACKAGECONFIG[inventory-network-scripts] = ",,,"
-RDEPENDS:mender-update:append = "${@bb.utils.contains('PACKAGECONFIG', 'inventory-network-scripts', ' wget', '', d)}"
 
 # NOTE: Splits the mender.conf file by default into a transient and a persistent config. Needs to be
 # explicitly disabled if this is not to apply.
@@ -79,27 +75,27 @@ inherit systemd
 SYSROOT_DIRS += "/data"
 
 SRC_URI:append:mender-image:mender-systemd = " \
-    file://mender-data-dir.service \
+    file://mender-client-data-dir.service \
 "
 
 SRC_URI:append:mender-persist-systemd-machine-id = " \
-    file://mender-systemd-machine-id.service \
-    file://mender-set-systemd-machine-id.sh \
+    file://mender-client-systemd-machine-id.service \
+    file://mender-client-set-systemd-machine-id.sh \
 "
 
 SRC_URI:append:mender-growfs-data:mender-systemd = " \
-    file://mender-resize-data-part.sh.in \
+    file://mender-client-resize-data-part.sh.in \
     file://mender-grow-data.service \
     file://mender-systemd-growfs-data.service \
 "
 
 FILES:mender-update:append:mender-image:mender-systemd = " \
-    ${systemd_unitdir}/system/mender-data-dir.service \
-    ${systemd_unitdir}/system/${MENDER_CLIENT}.service.wants/mender-data-dir.service \
+    ${systemd_unitdir}/system/mender-client-data-dir.service \
+    ${systemd_unitdir}/system/${MENDER_CLIENT}.service.wants/mender-client-data-dir.service \
 "
 
 FILES:mender-update:append:mender-growfs-data:mender-systemd = " \
-    ${bindir}/mender-resize-data-part \
+    ${bindir}/mender-client-resize-data-part \
     ${systemd_unitdir}/system/mender-grow-data.service \
     ${systemd_unitdir}/system/mender-systemd-growfs-data.service \
     ${systemd_unitdir}/system/data.mount.wants/mender-grow-data.service \
@@ -107,9 +103,9 @@ FILES:mender-update:append:mender-growfs-data:mender-systemd = " \
 "
 
 FILES:mender-update:append:mender-persist-systemd-machine-id = " \
-    ${systemd_unitdir}/system/mender-systemd-machine-id.service \
-    ${systemd_unitdir}/system/${MENDER_CLIENT}.service.wants/mender-systemd-machine-id.service \
-    ${bindir}/mender-set-systemd-machine-id.sh \
+    ${systemd_unitdir}/system/mender-client-systemd-machine-id.service \
+    ${systemd_unitdir}/system/${MENDER_CLIENT}.service.wants/mender-client-systemd-machine-id.service \
+    ${bindir}/mender-client-set-systemd-machine-id.sh \
 "
 
 FILES:mender-config += "\
@@ -283,32 +279,32 @@ do_install:append() {
 
 do_install:append:class-target:mender-image:mender-systemd() {
     install -d ${D}${systemd_unitdir}/system/
-    install -m 644 ${WORKDIR}/mender-data-dir.service ${D}${systemd_unitdir}/system/mender-data-dir.service
+    install -m 644 ${WORKDIR}/mender-client-data-dir.service ${D}${systemd_unitdir}/system/mender-client-data-dir.service
     install -d -m 755 ${D}${systemd_unitdir}/system/${MENDER_CLIENT}.service.wants
-    ln -sf ../mender-data-dir.service ${D}${systemd_unitdir}/system/${MENDER_CLIENT}.service.wants/mender-data-dir.service
+    ln -sf ../mender-client-data-dir.service ${D}${systemd_unitdir}/system/${MENDER_CLIENT}.service.wants/mender-client-data-dir.service
 }
 
 do_install:append:class-target:mender-growfs-data:mender-systemd() {
 
     if ${@bb.utils.contains('MENDER_FEATURES', 'mender-partlabel', 'true', 'false', d)}; then
         sed -i "s#@MENDER_DATA_PART@#\$(blkid -L ${MENDER_DATA_PART_LABEL})#g" \
-            ${WORKDIR}/mender-resize-data-part.sh.in
+            ${WORKDIR}/mender-client-resize-data-part.sh.in
     elif ${@bb.utils.contains('MENDER_FEATURES', 'mender-partuuid', 'true', 'false', d)}; then
         sed -i "s#@MENDER_DATA_PART@#\$(blkid | grep 'PARTUUID=\"${@mender_get_partuuid_from_device(d, '${MENDER_DATA_PART}')}\"' | awk -F: '{ print \$1 }')#g" \
-            ${WORKDIR}/mender-resize-data-part.sh.in
+            ${WORKDIR}/mender-client-resize-data-part.sh.in
     else
         sed -i "s#@MENDER_DATA_PART@#${MENDER_DATA_PART}#g" \
-            ${WORKDIR}/mender-resize-data-part.sh.in
+            ${WORKDIR}/mender-client-resize-data-part.sh.in
     fi
 
     sed -i "s#@MENDER_DATA_PART_NUMBER@#${MENDER_DATA_PART_NUMBER}#g" \
-        ${WORKDIR}/mender-resize-data-part.sh.in
+        ${WORKDIR}/mender-client-resize-data-part.sh.in
 
 
     install -d ${D}/${bindir}/
 
-    install -m 0755 ${WORKDIR}/mender-resize-data-part.sh.in \
-        ${D}/${bindir}/mender-resize-data-part
+    install -m 0755 ${WORKDIR}/mender-client-resize-data-part.sh.in \
+        ${D}/${bindir}/mender-client-resize-data-part
 
     install -d ${D}/${systemd_unitdir}/system
     install -m 644 ${WORKDIR}/mender-grow-data.service ${D}/${systemd_unitdir}/system/
@@ -320,11 +316,11 @@ do_install:append:class-target:mender-growfs-data:mender-systemd() {
 }
 
 do_install:append:class-target:mender-persist-systemd-machine-id() {
-    install -m 644 ${WORKDIR}/mender-systemd-machine-id.service ${D}${systemd_unitdir}/system/
+    install -m 644 ${WORKDIR}/mender-client-systemd-machine-id.service ${D}${systemd_unitdir}/system/
     install -d -m 755 ${D}${systemd_unitdir}/system/${MENDER_CLIENT}.service.wants
-    ln -sf ../mender-systemd-machine-id.service ${D}${systemd_unitdir}/system/${MENDER_CLIENT}.service.wants/
+    ln -sf ../mender-client-systemd-machine-id.service ${D}${systemd_unitdir}/system/${MENDER_CLIENT}.service.wants/
     install -d -m 755 ${D}${bindir}
-    install -m 755 ${WORKDIR}/mender-set-systemd-machine-id.sh ${D}${bindir}/
+    install -m 755 ${WORKDIR}/mender-client-set-systemd-machine-id.sh ${D}${bindir}/
 }
 
 do_install() {
