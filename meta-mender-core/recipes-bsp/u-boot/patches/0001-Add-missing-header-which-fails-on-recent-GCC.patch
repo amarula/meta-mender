@@ -11,7 +11,7 @@ diff --git a/tools/env/fw_env.c b/tools/env/fw_env.c
 index 2a61a5d6f0..b0bce1b5ac 100644
 --- a/tools/env/fw_env.c
 +++ b/tools/env/fw_env.c
-@@ -20,6 +20,7 @@
+@@ -19,6 +19,7 @@
  #include <ctype.h>
  #include <stdio.h>
  #include <stdlib.h>
