@@ -7,7 +7,7 @@ PKGV = "${@'999+${PV}' if any(['${PV}'.startswith(p) for p in ['master', 'featur
 
 MENDER_BRANCH = "${@mender_branch_from_preferred_version(d)}"
 
-SRC_URI = "git://github.com/mendersoftware/mender;protocol=https;branch=${MENDER_BRANCH}"
+SRC_URI = "gitsm://github.com/mendersoftware/mender;protocol=https;branch=${MENDER_BRANCH}"
 
 # Disables the need for every dependency to be checked, for easier development.
 _MENDER_DISABLE_STRICT_LICENSE_CHECKING = "1"
@@ -88,7 +88,7 @@ def mender_license(branch):
             "license_file": "file://LICENSE",
         }
 LIC_FILES_CHKSUM = " \
-    ${@mender_license(d.getVar('MENDER_BRANCH'))['license_file']};md5=f92624f2343d21e1986ca36f82756029 \
+    ${@mender_license(d.getVar('MENDER_BRANCH'))['license_file']};md5=a8c81350f12516cbb62844f937d81d11 \
 "
 LICENSE = "${@mender_license(d.getVar('MENDER_BRANCH'))['license']}"
 

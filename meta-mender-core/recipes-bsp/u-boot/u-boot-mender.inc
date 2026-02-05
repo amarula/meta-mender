@@ -15,12 +15,12 @@ MENDER_UBOOT_AUTO_CONFIGURE ??= "${@bb.utils.contains('MENDER_FEATURES', 'mender
 FILESEXTRAPATHS:prepend := "${THISDIR}/patches:${THISDIR}/files:"
 
 SRC_URI:append:mender-uboot = " file://0001-Add-missing-header-which-fails-on-recent-GCC.patch"
-SRC_URI:append:mender-uboot = " file://0002-Generic-boot-code-for-Mender.patch"
-SRC_URI:append:mender-uboot = " file://0003-Integration-of-Mender-boot-code-into-U-Boot.patch"
+SRC_URI:append:mender-uboot = " file://0001-Generic-boot-code-for-Mender.patch"
+SRC_URI:append:mender-uboot = " file://0002-Integration-of-Mender-boot-code-into-U-Boot.patch"
 
 SRC_URI:append:mender-uboot = "${@bb.utils.contains('MENDER_UBOOT_AUTO_CONFIGURE', \
                                                     '1', \
-                                                    ' file://0004-Disable-CONFIG_BOOTCOMMAND-and-enable-CONFIG_MENDER_.patch', \
+                                                    ' file://0003-Disable-CONFIG_BOOTCOMMAND-and-enable-CONFIG_MENDER_.patch', \
                                                     '', \
                                                     d)}"
 
@@ -38,9 +38,7 @@ do_provide_mender_defines() {
     # Since the libubootenv recipe will typically not have access to the proper
     # BOOTENV_SIZE, let's create the fw_env.config file here, so that it can
     # pick it from the deploy directory.
-    if [ ! -e "${WORKDIR}/fw_env.config.default" ]; then
-        mender_create_fw_env_config_file ${WORKDIR}/fw_env.config.default
-    fi
+    mender_create_fw_env_config_file ${WORKDIR}/fw_env.config.default
 
     if [ ${MENDER_UBOOT_CONFIG_SYS_MMC_ENV_PART} -eq "0" ]; then
         # Only check reserved space for bootloader data when the bootloader data is saved to the user partition of the MMC.
@@ -352,6 +350,9 @@ do_save_mender_auto_configured_patch() {
     # Get rid of absolute paths in the patch.
     sed -ie '/---\|+++/ { s%${MENDER_UBOOT_OLD_SRC}%a%; s%${S}%b% }' ${WORKDIR}/mender_auto_configured.patch
 
+    # Prepend Patch Upstream Status
+    sed -i '1 iUpstream-Status: Inappropriate [Mender specific]\n\n---\n' ${WORKDIR}/mender_auto_configured.patch
+
     # "bbnote" might be more appropriate here, but it doesn't always display.
     bbwarn "Auto configured U-Boot patch has been stored in ${WORKDIR}/mender_auto_configured.patch"
 }
@@ -388,7 +389,6 @@ do_deploy:append:mender-uboot() {
 
     install -m 644 ${WORKDIR}/fw_env.config.default ${DEPLOYDIR}/fw_env.config.default
 }
-addtask deploy after do_compile before do_package
 
 # Ignore this, only used for testing.
 # The reason it's here is so that the test URI is appended last.
